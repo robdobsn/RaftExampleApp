@@ -1,0 +1,9 @@
+idf_component_register(
+    SRCS 
+        "IMUSysMod.cpp"
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        RaftCore
+        RaftI2C
+)

@@ -9,6 +9,7 @@
 #include "RegisterWebServer.h"
 #include "LEDRingSysMod.h"
 #include "AppSysMod.h"
+#include "IMUSysMod.h"
 
 // Entry point
 extern "C" void app_main(void)
@@ -23,6 +24,9 @@ extern "C" void app_main(void)
 
     // Register the LEDRing system module
     raftCoreApp.registerSysMod("LEDRingSysMod", LEDRingSysMod::create, true);
+
+    // Register the IMU system module
+    raftCoreApp.registerSysMod("IMUSysMod", IMUSysMod::create, true);
 
     // Register app
     raftCoreApp.registerSysMod("AppSysMod", AppSysMod::create, true);

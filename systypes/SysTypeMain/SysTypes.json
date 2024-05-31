@@ -132,5 +132,19 @@
                 "num": 16
             }
         ]
+    },
+    "IMUSysMod": {
+        "Buses": {
+            "buslist":
+            [
+                {
+                    "name": "I2CA",
+                    "type": "I2C",
+                    "sdaPin": 8,
+                    "sclPin": 9,
+                    "i2cFreq": 100000
+                }
+            ]
+        }
     }
 }

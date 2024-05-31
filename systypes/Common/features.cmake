@@ -8,6 +8,7 @@ add_compile_definitions(SYSTEM_VERSION="1.0.0")
 set(RAFT_COMPONENTS
     RaftSysMods@main
     RaftWebServer@main
+    RaftI2C@main
 )
 
 # File system
