@@ -94,6 +94,14 @@
                 "maxConn": 4,
                 "txQueueMax": 20,
                 "pingMs": 30000
+            },
+            {
+                "pfix": "wsjson",
+                "pcol": "RICJSON",
+                "maxConn": 4,
+                "txQueueMax": 20,
+                "pingMs": 30000,
+                "content": "text"
             }
         ],
         "logLevel": "D",
@@ -115,7 +123,14 @@
     },
     "Publish": {
         "enable": 1,
-        "pubList": []
+        "pubList": [
+            {
+                "name": "IMU",
+                "trigger": "TimeOrChange",
+                "msgID": "IMU",
+                "rates": []
+            }
+        ]
     },
     "AppSysMod": {
         "exampleGroup": {

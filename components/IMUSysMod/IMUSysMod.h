@@ -30,6 +30,9 @@ protected:
     // Loop (called frequently)
     virtual void loop() override final;
 
+    // Status
+    virtual String getStatusJSON() const override final;
+
 private:
     // Bus manager
     RaftBusSystem _raftBusSystem;
@@ -37,6 +40,9 @@ private:
     // Bus operation and status functions
     void busElemStatusCB(RaftBus& bus, const std::vector<BusElemAddrAndStatus>& statusChanges);
     void busOperationStatusCB(RaftBus& bus, BusOperationStatus busOperationStatus);
+
+    // Hash of status
+    void getStatusHash(std::vector<uint8_t>& stateHash) const;
 
     // Last report time
     uint32_t _debugLastReportTimeMs = 0;

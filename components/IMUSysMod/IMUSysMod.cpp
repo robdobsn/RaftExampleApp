@@ -7,12 +7,15 @@
 #include "IMUSysMod.h"
 #include "RaftUtils.h"
 #include "BusI2C.h"
-#include "DeviceTypeRecords_generated.h"
+#include "SysManager.h"
+#include "DevicePollRecords_generated.h"
 
 static const char *MODULE_PREFIX = "IMUSysMod";
 
-// Comment this line to decode on-device
+// Uncomment one of the following line to decode off-device or on-device
+// or leave them both commented to not decode at all
 // #define DECODE_OFF_DEVICE
+// #define DECODE_ON_DEVICE
 
 IMUSysMod::IMUSysMod(const char *pModuleName, RaftJsonIF& sysConfig)
     : RaftSysMod(pModuleName, sysConfig)
@@ -23,6 +26,8 @@ IMUSysMod::~IMUSysMod()
 {
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief setup function
 void IMUSysMod::setup()
 {
     // Register BusI2C
@@ -32,15 +37,29 @@ void IMUSysMod::setup()
     _raftBusSystem.setup("Buses", modConfig(),
             std::bind(&IMUSysMod::busElemStatusCB, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&IMUSysMod::busOperationStatusCB, this, std::placeholders::_1, std::placeholders::_2)
-    );    
+    );
+
+    // Register data source (message generator and state detector functions)
+    getSysManager()->registerDataSource("Publish", "IMU", 
+        [this](const char* messageName, CommsChannelMsg& msg) {
+            String statusStr = getStatusJSON();
+            msg.setFromBuffer((uint8_t*)statusStr.c_str(), statusStr.length());
+            return true;
+        },
+        [this](const char* messageName, std::vector<uint8_t>& stateHash) {
+            return getStatusHash(stateHash);
+        }
+    );
 }
 
-#ifdef DECODE_OFF_DEVICE
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief loop function
 void IMUSysMod::loop()
 {
     // Service the buses
     _raftBusSystem.loop();
+
+#ifdef DECODE_OFF_DEVICE
 
     // Check if we should report device data (100ms intervals)
     if (Raft::isTimeout(millis(), _debugLastReportTimeMs, 100))
@@ -65,14 +84,10 @@ void IMUSysMod::loop()
         LOG_I(MODULE_PREFIX, "loop %s", (jsonStr.length() == 0 ? "{}" : (jsonStr + "}").c_str()));
         _debugLastReportTimeMs = millis();
     }
-}
 
-#else
+#endif
 
-void IMUSysMod::loop()
-{
-    // Service the buses
-    _raftBusSystem.loop();
+#ifdef DECODE_ON_DEVICE
 
     // Check if we should report device data (100ms intervals)
     if (Raft::isTimeout(millis(), _debugLastReportTimeMs, 100))
@@ -118,9 +133,54 @@ void IMUSysMod::loop()
         }
         _debugLastReportTimeMs = millis();
     }
+#endif
 }
 
-#endif
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Get status as JSON
+/// @return JSON string
+String IMUSysMod::getStatusJSON() const
+{
+    String jsonStr;
+    for (RaftBus* pBus : _raftBusSystem.getBusList())
+    {
+        if (!pBus)
+            continue;
+        // Get device interface
+        RaftBusDevicesIF* pDevicesIF = pBus->getBusDevicesIF();
+        if (!pDevicesIF)
+            continue; 
+        String jsonRespStr = pDevicesIF->getPollResponsesJson();
+        if (jsonRespStr.length() > 0)
+        {
+            jsonStr += (jsonStr.length() == 0 ? "{\"" : ",\"") + pBus->getBusName() + "\":" + jsonRespStr;
+        }
+    }
+    // LOG_I(MODULE_PREFIX, "getStatusJSON %s", jsonStr.c_str());
+
+    return jsonStr.length() == 0 ? "{}" : jsonStr + "}";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Check for change of state
+/// @param stateHash hash of the current state
+void IMUSysMod::getStatusHash(std::vector<uint8_t>& stateHash) const
+{
+    stateHash.clear();
+
+    // Check all buses for data
+    for (RaftBus* pBus : _raftBusSystem.getBusList())
+    {
+        // Check bus
+        if (pBus)
+        {
+            // Check bus status
+            uint32_t identPollLastMs = pBus->getLastStatusUpdateMs(true, true);
+            stateHash.push_back(identPollLastMs & 0xff);
+            stateHash.push_back((identPollLastMs >> 8) & 0xff);
+        }
+    }
+}
 
 /// @brief Bus operation status callback
 /// @param bus
