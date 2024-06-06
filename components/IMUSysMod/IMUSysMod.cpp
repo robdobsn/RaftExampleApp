@@ -180,6 +180,9 @@ void IMUSysMod::getStatusHash(std::vector<uint8_t>& stateHash) const
             stateHash.push_back((identPollLastMs >> 8) & 0xff);
         }
     }
+
+    // Debug
+    // LOG_I(MODULE_PREFIX, "getStatusHash %s", stateHash.size() == 0 ? "No data" : ("Data " + String(stateHash[0])).c_str());
 }
 
 /// @brief Bus operation status callback
@@ -200,7 +203,8 @@ void IMUSysMod::busElemStatusCB(RaftBus& bus, const std::vector<BusElemAddrAndSt
     // Debug
     for (const auto& el : statusChanges)
     {
-        LOG_I(MODULE_PREFIX, "busElemStatusInfo %s %s %s", bus.getBusName().c_str(), 
-            bus.addrToString(el.address).c_str(), el.isChangeToOnline ? "Online" : ("Offline" + String(el.isChangeToOffline ? " (was online)" : "")).c_str());
+        LOG_I(MODULE_PREFIX, "busElemStatusInfo %s %s %s %s", bus.getBusName().c_str(), 
+            bus.addrToString(el.address).c_str(), el.isChangeToOnline ? "Online" : ("Offline" + String(el.isChangeToOffline ? " (was online)" : "")).c_str(),
+            el.isNewlyIdentified ? ("DevTypeIdx " + String(el.deviceTypeIndex)).c_str() : "");
     }
 }
