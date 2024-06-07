@@ -47,7 +47,7 @@ void IMUSysMod::setup()
             return true;
         },
         [this](const char* messageName, std::vector<uint8_t>& stateHash) {
-            return getStatusHash(stateHash);
+            getStatusHash(stateHash);
         }
     );
 }
