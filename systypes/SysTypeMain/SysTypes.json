@@ -143,8 +143,8 @@
         "colorOrder": "GRB",
         "strips": [
             {
-                "pin": 7,
-                "num": 16
+                "pin": 18,
+                "num": 15
             }
         ]
     },
@@ -155,8 +155,8 @@
                 {
                     "name": "I2CA",
                     "type": "I2C",
-                    "sdaPin": 8,
-                    "sclPin": 9,
+                    "sdaPin": 21,
+                    "sclPin": 47,
                     "i2cFreq": 100000
                 }
             ]
